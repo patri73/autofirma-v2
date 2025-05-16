@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Solicitud PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f9f9f9;
+            padding-top: 50px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        #contador {
+            text-align: right;
+            font-size: 0.9em;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Solicitud PDF</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label required" for="{{ form.nombre.id_for_label }}">Nombre</label>
+            {{ form.nombre }}
+            <div id="error_nombre" class="text-danger"></div>
+            {% for error in form.nombre.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required" for="{{ form.apellido1.id_for_label }}">Primer Apellido</label>
+            {{ form.apellido1 }}
+            <div id="error_apellido1" class="text-danger"></div>
+            {% for error in form.apellido1.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required" for="{{ form.apellido2.id_for_label }}">Segundo Apellido</label>
+            {{ form.apellido2 }}
+            <div id="error_apellido2" class="text-danger"></div>
+            {% for error in form.apellido2.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required" for="{{ form.dni.id_for_label }}">DNI</label>
+            {{ form.dni }}
+            <div id="error_dni" class="text-danger"></div> 
+            {% for error in form.dni.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required" for="{{ form.texto.id_for_label }}">Texto libre</label>
+            {{ form.texto }}
+            <div id="contador">0 / 512 caracteres</div>
+            {% for error in form.texto.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" id="boton-borrar">Borrar</button>
+            <button type="submit" class="btn btn-primary">Confirmar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const caracteresNoPermitidos = ['|', '!', '¡', '#', '$', '/', '\\', '(', ')', '=', '?',
+                                    '¿', '^', '*', '+', '-', '_', ';', '[', ']', '{', '}',
+                                    '<', '>', '¬', '@', '"', "'"];
+
+    function contieneCaracteresNoPermitidos(valor) {
+        return caracteresNoPermitidos.some(car => valor.includes(car));
+    }
+
+    function validarCampo(inputId, errorId, obligatorio = true) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+        if (!input || !error) return;
+
+        input.addEventListener('input', () => {
+            const valor = input.value.trim();
+
+            if (obligatorio && valor === '') {
+                error.textContent = 'Este campo es obligatorio.';
+            } else if (contieneCaracteresNoPermitidos(valor)) {
+                error.textContent = 'Este campo contiene caracteres no permitidos.';
+            } else {
+                error.textContent = '';
+            }
+        });
+    }
+
+    function validarDNI() {
+        const input = document.getElementById('id_dni');
+        const error = document.getElementById('error_dni');
+        if (!input || !error) return;
+
+        input.addEventListener('input', () => {
+            let valor = input.value.toUpperCase();
+
+            const match = valor.match(/^(\d{0,8})([A-Z]?)$/);
+            if (match) {
+                input.value = match[1] + match[2];
+                valor = input.value;
+            }
+
+            const patronDNI = /^\d{8}[A-Z]$/;
+            if (valor === '') {
+                error.textContent = 'Este campo es obligatorio.';
+            } else if (contieneCaracteresNoPermitidos(valor)) {
+                error.textContent = 'El DNI contiene caracteres no permitidos.';
+            } else if (!patronDNI.test(valor)) {
+                error.textContent = 'Introduce un DNI válido (8 números y una letra).';
+            } else {
+                error.textContent = '';
+            }
+        });
+    }
+
+    function actualizarContador() {
+        const textarea = document.getElementById('texto');
+        const contador = document.getElementById('contador');
+        if (!textarea || !contador) return;
+
+        contador.innerText = `${textarea.value.length} / 512 caracteres`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        validarCampo('id_nombre', 'error_nombre', true);
+        validarCampo('id_apellido1', 'error_apellido1', true);
+        validarCampo('id_apellido2', 'error_apellido2', false);
+        validarDNI();
+
+        const texto = document.getElementById('texto');
+        const errorTexto = document.getElementById('error_texto');
+        if (texto && errorTexto) {
+            texto.addEventListener('input', () => {
+                if (contieneCaracteresNoPermitidos(texto.value)) {
+                    errorTexto.textContent = 'Este campo contiene caracteres no permitidos.';
+                } else {
+                    errorTexto.textContent = '';
+                }
+                actualizarContador();
+            });
+            actualizarContador();
+        }
+
+        const botonBorrar = document.getElementById('boton-borrar');
+        if (botonBorrar) {
+            botonBorrar.addEventListener('click', () => {
+                const camposTexto = document.querySelectorAll('input[type="text"], textarea');
+                camposTexto.forEach(campo => campo.value = '');
+
+                const errores = document.querySelectorAll('.text-danger');
+                errores.forEach(error => error.textContent = '');
+
+                if (document.getElementById('contador')) {
+                    document.getElementById('contador').innerText = '0 / 512 caracteres';
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

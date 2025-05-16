@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Documento generado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        iframe {
+            width: 100%;
+            height: 80vh;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+
+        .botones {
+            display: flex;
+            gap: 1100px;
+            justify-content: space-between
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Documento generado</h1>
+        <p>Tu documento ha sido generado correctamente. Puedes revisarlo a continuación:</p>
+
+        <iframe src="{{ ver_pdf_url }}"></iframe>
+
+        <div class="botones">
+            <form action="{% url 'formulario' %}" method="get">
+                <button type="submit" class="btn btn-secondary">Editar datos</button>
+            </form>
+
+            <a href="{{ ver_pdf_url }}" download class="btn btn-primary">Descargar PDF</a>
+        </div>
+    </div>
+</body>
+</html>
+
