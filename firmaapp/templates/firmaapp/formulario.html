@@ -29,6 +29,11 @@
             font-size: 0.9em;
             color: gray;
         }
+        textarea {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            resize: vertical;
+        }
     </style>
 </head>
 <body>
@@ -40,48 +45,34 @@
         {% csrf_token %}
 
         <div class="mb-3">
-            <label class="form-label required" for="{{ form.nombre.id_for_label }}">Nombre</label>
-            {{ form.nombre }}
+            <label class="form-label required" for="id_nombre">Nombre</label>
+            <input type="text" id="id_nombre" name="nombre" class="form-control">
             <div id="error_nombre" class="text-danger"></div>
-            {% for error in form.nombre.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
         </div>
 
         <div class="mb-3">
-            <label class="form-label required" for="{{ form.apellido1.id_for_label }}">Primer Apellido</label>
-            {{ form.apellido1 }}
+            <label class="form-label required" for="id_apellido1">Primer Apellido</label>
+            <input type="text" id="id_apellido1" name="apellido1" class="form-control">
             <div id="error_apellido1" class="text-danger"></div>
-            {% for error in form.apellido1.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
         </div>
 
         <div class="mb-3">
-            <label class="form-label required" for="{{ form.apellido2.id_for_label }}">Segundo Apellido</label>
-            {{ form.apellido2 }}
+            <label class="form-label" for="id_apellido2">Segundo Apellido</label>
+            <input type="text" id="id_apellido2" name="apellido2" class="form-control">
             <div id="error_apellido2" class="text-danger"></div>
-            {% for error in form.apellido2.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
         </div>
 
         <div class="mb-3">
-            <label class="form-label required" for="{{ form.dni.id_for_label }}">DNI</label>
-            {{ form.dni }}
-            <div id="error_dni" class="text-danger"></div> 
-            {% for error in form.dni.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
+            <label class="form-label required" for="id_dni">DNI</label>
+            <input type="text" id="id_dni" name="dni" class="form-control">
+            <div id="error_dni" class="text-danger"></div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label required" for="{{ form.texto.id_for_label }}">Texto libre</label>
-            {{ form.texto }}
+            <label class="form-label required" for="texto">Texto libre</label>
+            <textarea id="texto" name="texto" maxlength="512" class="form-control" rows="5" placeholder="Máximo 512 caracteres"></textarea>
             <div id="contador">0 / 512 caracteres</div>
-            {% for error in form.texto.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
+            <div id="error_texto" class="text-danger"></div>
         </div>
 
         <div class="d-flex justify-content-between">
@@ -148,9 +139,23 @@
     function actualizarContador() {
         const textarea = document.getElementById('texto');
         const contador = document.getElementById('contador');
+        const errorTexto = document.getElementById('error_texto');
+
         if (!textarea || !contador) return;
 
-        contador.innerText = `${textarea.value.length} / 512 caracteres`;
+        const longitud = textarea.value.length;
+        contador.innerText = `${longitud} / 512 caracteres`;
+
+        if (longitud > 512) {
+            contador.style.color = 'red';
+            errorTexto.textContent = 'Has superado el límite máximo de 512 caracteres.';
+        } else if (contieneCaracteresNoPermitidos(textarea.value)) {
+            errorTexto.textContent = 'El texto contiene caracteres no permitidos.';
+            contador.style.color = 'red';
+        } else {
+            errorTexto.textContent = '';
+            contador.style.color = 'gray';
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -160,16 +165,8 @@
         validarDNI();
 
         const texto = document.getElementById('texto');
-        const errorTexto = document.getElementById('error_texto');
-        if (texto && errorTexto) {
-            texto.addEventListener('input', () => {
-                if (contieneCaracteresNoPermitidos(texto.value)) {
-                    errorTexto.textContent = 'Este campo contiene caracteres no permitidos.';
-                } else {
-                    errorTexto.textContent = '';
-                }
-                actualizarContador();
-            });
+        if (texto) {
+            texto.addEventListener('input', actualizarContador);
             actualizarContador();
         }
 
@@ -182,8 +179,10 @@
                 const errores = document.querySelectorAll('.text-danger');
                 errores.forEach(error => error.textContent = '');
 
-                if (document.getElementById('contador')) {
-                    document.getElementById('contador').innerText = '0 / 512 caracteres';
+                const contador = document.getElementById('contador');
+                if (contador) {
+                    contador.innerText = '0 / 512 caracteres';
+                    contador.style.color = 'gray';
                 }
             });
         }

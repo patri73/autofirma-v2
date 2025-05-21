@@ -5,7 +5,6 @@ from django.urls import reverse
 from reportlab.pdfgen import canvas    
 from .forms import FirmaForm
 from reportlab.lib.pagesizes import A4
-from django.conf import settings
 import os
 from datetime import datetime
 
@@ -29,7 +28,7 @@ def formulario_view(request):
 def confirmacion(request):
     datos = request.session.get('datos_formulario')
     if not datos:
-        return redirect('formulario')  
+        return redirect('formulario')
 
     datos['apellidos'] = f"{datos.get('apellido1', '')} {datos.get('apellido2', '')}".strip()
 
@@ -82,11 +81,13 @@ def generar_pdf(request):
     c.save()
 
     ver_pdf_url = reverse('ver_pdf', kwargs={'filename': filename})
+    file_url = request.build_absolute_uri(ver_pdf_url)
 
     return render(request, 'firmaapp/pdf_generado.html', {
         'datos': datos,
         'pdf_filename': filename,
         'ver_pdf_url': ver_pdf_url,
+        'file_url': file_url,
     })
 
 
